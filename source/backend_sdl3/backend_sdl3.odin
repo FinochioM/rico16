@@ -11,12 +11,14 @@ INTERFACE :: platform.Interface {
 	process_events = process_events,
 	present = present,
 	time = time,
+	key_pressed = key_pressed,
 }
 
 window: ^sdl.Window
 renderer: ^sdl.Renderer
 texture: ^sdl.Texture
 tex_w, tex_h: int
+pressed: bit_set[platform.Key]
 
 init :: proc(title: string, width, height: int) -> bool {
 	if !sdl.Init({.VIDEO}) {
@@ -55,10 +57,16 @@ shutdown :: proc() {
 process_events :: proc() -> bool {
 	e: sdl.Event
 
+	pressed = {}
+
 	for sdl.PollEvent(&e) {
 		#partial switch e.type {
 			case .QUIT:
 				return false
+			case .KEY_DOWN:
+				if !e.key.repeat && e.key.scancode == .TAB {
+					pressed += {.Tab}
+				}
 		}
 	}
 
@@ -88,4 +96,8 @@ present :: proc(pixels: []u32, width, height: int) {
 
 time :: proc() -> f64 {
 	return f64(sdl.GetTicksNS()) / 1e9
+}
+
+key_pressed :: proc(k: platform.Key) -> bool {
+	return k in pressed
 }

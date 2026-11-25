@@ -61,3 +61,19 @@ circles :: proc(t: ^testing.T) {
 	testing.expect_value(t, rico.pget(mem, 10, 10), 3)
 	testing.expect_value(t, rico.pget(mem, 11, 10), 0)
 }
+
+@(test)
+modes :: proc(t: ^testing.T) {
+	mem := new(rico.Memory)
+	defer free(mem)
+	rico.init(mem, .Standard)
+
+	rico.set_mode(mem, .Wide)
+	w, h := rico.screen_size(mem)
+	testing.expect_value(t, w, 320)
+	testing.expect_value(t, h, 180)
+
+	rico.pset(mem, 319, 179, 4)
+	testing.expect_value(t, rico.pget(mem, 319, 179), 4)
+	testing.expect_value(t, rico.pget(mem, 320, 0), 0)
+}

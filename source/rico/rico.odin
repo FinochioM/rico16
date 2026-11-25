@@ -27,6 +27,11 @@ init :: proc(mem: ^Memory, mode: Mode) {
 	mem.palettes[0] = RICO_PALETTE
 }
 
+set_mode :: proc(mem: ^Memory, mode: Mode) {
+	mem.mode = mode
+	cls(mem)
+}
+
 screen_size :: proc(mem: ^Memory) -> (w, h: int) {
 	s := MODE_SIZE[mem.mode]
 	return s.x, s.y

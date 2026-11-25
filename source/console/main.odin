@@ -39,6 +39,11 @@ main :: proc() {
 		acc += min(now - last, 0.25)
 		last = now
 
+		if pf.key_pressed(.Tab) {
+			next := rico.Mode((int(mem.mode) + 1) %len(rico.Mode))
+			rico.set_mode(mem, next)
+		}
+
 		for acc >= FRAME {
 			frame += 1
 			acc -= FRAME
