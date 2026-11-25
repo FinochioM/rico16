@@ -26,13 +26,7 @@ Glyph :: struct {
 	width: int,
 }
 
-font: [128]Glyph
-
-load_font :: proc() {
-	if font['A'].width != 0 {
-		return
-	}
-
+load_font :: proc(mem: ^Memory) {
 	img, err := png.load_from_bytes(FONT_PNG, {.alpha_add_if_missing})
 	assert(err == nil && img.channels == 4 && img.depth == 8, "bad font png")
 
@@ -40,7 +34,7 @@ load_font :: proc() {
 
 	for line, row in FONT_LAYOUT {
 		for c, col in line {
-			g := &font[c]
+			g := &mem.font[c]
 			for y in 0..<FONT_CELL {
 				for x in 0..<FONT_CELL {
 					px := col * FONT_PITCH + 1 + x
@@ -59,16 +53,16 @@ load_font :: proc() {
 	}
 
 	//empty a space thats marked by the sheet
-	font[' '] = {width = SPACE_WIDTH}
+	mem.font[' '] = {width = SPACE_WIDTH}
 }
 
 glyph :: proc(mem: ^Memory, r: rune, x, y: int, col: u8) -> int {
 	c := r
-	if c < 0 || c > 127 || font[c].width == 0 {
+	if c < 0 || c > 127 || mem.font[c].width == 0 {
 		c = '?'
 	}
 
-	g := font[c]
+	g := mem.font[c]
 	for bits, row in g.rows {
 		for column in 0..<FONT_CELL {
 			if bits & (1 << uint(column)) != 0 {
@@ -96,7 +90,7 @@ print :: proc(mem: ^Memory, s: string, x, y: int, col: u8) -> int {
 	return cx
 }
 
-text_width :: proc(s: string) -> int {
+text_width :: proc(mem: ^Memory, s: string) -> int {
 	longest, n := 0,0
 
 	for r in s {
@@ -107,11 +101,11 @@ text_width :: proc(s: string) -> int {
 
 		c := r
 
-		if c < 0 || c > 127 || font[c].width == 0 {
+		if c < 0 || c > 127 || mem.font[c].width == 0 {
 			c = '?'
 		}
 
-		n += font[c].width + 1
+		n += mem.font[c].width + 1
 		longest = max(longest, n)
 	}
 

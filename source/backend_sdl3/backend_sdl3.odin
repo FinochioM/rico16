@@ -12,6 +12,7 @@ INTERFACE :: platform.Interface {
 	present = present,
 	time = time,
 	key_pressed = key_pressed,
+	pad = pad,
 }
 
 window: ^sdl.Window
@@ -19,9 +20,12 @@ renderer: ^sdl.Renderer
 texture: ^sdl.Texture
 tex_w, tex_h: int
 pressed: bit_set[platform.Key]
+gamepads: [platform.MAX_PADS] ^sdl.Gamepad
+
+STICK_DEADZONE :: 12000
 
 init :: proc(title: string, width, height: int) -> bool {
-	if !sdl.Init({.VIDEO}) {
+	if !sdl.Init({.VIDEO, .GAMEPAD}) {
 		log.errorf("SDL_Init failed: %s", sdl.GetError())
 		return false
 	}
@@ -45,6 +49,12 @@ init :: proc(title: string, width, height: int) -> bool {
 }
 
 shutdown :: proc() {
+	for gp in gamepads {
+		if gp != nil {
+			sdl.CloseGamepad(gp)
+		}
+	}
+
 	if texture != nil {
 		sdl.DestroyTexture(texture)
 	}
@@ -67,6 +77,10 @@ process_events :: proc() -> bool {
 				if !e.key.repeat && e.key.scancode == .TAB {
 					pressed += {.Tab}
 				}
+			case .GAMEPAD_ADDED:
+				open_gamepad(e.gdevice.which)
+			case .GAMEPAD_REMOVED:
+				close_gamepad(e.gdevice.which)
 		}
 	}
 
@@ -100,4 +114,74 @@ time :: proc() -> f64 {
 
 key_pressed :: proc(k: platform.Key) -> bool {
 	return k in pressed
+}
+
+open_gamepad :: proc(id: sdl.JoystickID) {
+	for &slot in gamepads {
+		if slot == nil {
+			slot = sdl.OpenGamepad(id)
+			log.infof("gamepad connected: %s", sdl.GetGamepadName(slot))
+			return
+		}
+	}
+}
+
+close_gamepad :: proc(id: sdl.JoystickID) {
+	for &slot in gamepads {
+		if slot != nil && sdl.GetGamepadID(slot) == id {
+			sdl.CloseGamepad(slot)
+			slot = nil
+		}
+	}
+}
+
+pad :: proc(player: int) -> platform.Pad_State {
+	s: platform.Pad_State
+
+	if player < 0 || player >= platform.MAX_PADS {
+		return s
+	}
+
+	if player == 0 {
+		keys := sdl.GetKeyboardState(nil)
+		if keys[sdl.Scancode.LEFT] {s+= {.Left}}
+		if keys[sdl.Scancode.RIGHT] {s+= {.Right}}
+		if keys[sdl.Scancode.UP] {s+= {.Up}}
+		if keys[sdl.Scancode.DOWN] {s+= {.Down}}
+		if keys[sdl.Scancode.X] {s+= {.A}}
+		if keys[sdl.Scancode.Z] {s+= {.B}}
+		if keys[sdl.Scancode.S] {s+= {.X}}
+		if keys[sdl.Scancode.A] {s+= {.Y}}
+		if keys[sdl.Scancode.Q] {s+= {.L}}
+		if keys[sdl.Scancode.W] {s+= {.R}}
+		if keys[sdl.Scancode.RETURN] {s+= {.Start}}
+	}
+
+	gp := gamepads[player]
+	if gp == nil {
+		return s
+	}
+
+	//we follow snes layout for now
+	if sdl.GetGamepadButton(gp, .DPAD_LEFT) {s += {.Left}}
+	if sdl.GetGamepadButton(gp, .DPAD_RIGHT) {s += {.Right}}
+	if sdl.GetGamepadButton(gp, .DPAD_UP) {s += {.Up}}
+	if sdl.GetGamepadButton(gp, .DPAD_DOWN) {s += {.Down}}
+	if sdl.GetGamepadButton(gp, .EAST) {s += {.A}}
+	if sdl.GetGamepadButton(gp, .SOUTH) {s += {.B}}
+	if sdl.GetGamepadButton(gp, .NORTH) {s += {.X}}
+	if sdl.GetGamepadButton(gp, .WEST) {s += {.Y}}
+	if sdl.GetGamepadButton(gp, .LEFT_SHOULDER) {s += {.L}}
+	if sdl.GetGamepadButton(gp, .RIGHT_SHOULDER) {s += {.R}}
+	if sdl.GetGamepadButton(gp, .START) {s += {.Start}}
+
+	lx := sdl.GetGamepadAxis(gp, .LEFTX)
+	ly := sdl.GetGamepadAxis(gp, .LEFTY)
+
+	if lx < -STICK_DEADZONE { s+={.Left}}
+	if lx > STICK_DEADZONE {s +={.Right}}
+	if ly < -STICK_DEADZONE {s+={.Up}}
+	if ly > STICK_DEADZONE {s+={.Down}}
+
+	return s
 }

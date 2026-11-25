@@ -19,13 +19,16 @@ Memory :: struct {
 	mode: Mode,
 	palettes: [16][16]u32,
 	screen: [SCREEN_MAX_W * SCREEN_MAX_H]u8,
+	pad: [MAX_PLAYERS]Buttons,
+	pad_held: [MAX_PLAYERS][Button]u16,
+	font: [128]Glyph,
 }
 
 init :: proc(mem: ^Memory, mode: Mode) {
 	mem^ = {}
 	mem.mode = mode
 	mem.palettes[0] = RICO_PALETTE
-	load_font()
+	load_font(mem)
 }
 
 set_mode :: proc(mem: ^Memory, mode: Mode) {

@@ -28,7 +28,7 @@ print_glyphs :: proc(t: ^testing.T) {
 		}
 	}
 
-	testing.expect_value(t, rico.text_width("é"), rico.text_width("?"))
+	testing.expect_value(t, rico.text_width(mem, "é"), rico.text_width(mem, "?"))
 
 	rico.print(mem, "clip", -2, -2, 1)
 	rico.print(mem, "clip", 254, 220, 1)
@@ -41,9 +41,9 @@ text_width :: proc(t: ^testing.T) {
 
 	rico.init(mem, .Standard)
 
-	testing.expect_value(t, rico.text_width(""), 0)
-	testing.expect_value(t, rico.text_width("A"), 3)
-	testing.expect_value(t, rico.text_width("AA"), 7)
-	testing.expect_value(t, rico.text_width("A\nAA"), 7)
-	testing.expect_value(t, rico.text_width("M"), 5)
+	testing.expect_value(t, rico.text_width(mem, ""), 0)
+	testing.expect_value(t, rico.text_width(mem, "A"), 3)
+	testing.expect_value(t, rico.text_width(mem, "AA"), 7)
+	testing.expect_value(t, rico.text_width(mem, "A\nAA"), 7)
+	testing.expect_value(t, rico.text_width(mem, "M"), 5)
 }
