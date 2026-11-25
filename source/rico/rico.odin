@@ -1,0 +1,41 @@
+package rico
+
+Mode :: enum u8 {
+	Standard, // 256x224
+	Wide, //320x180
+	Hires,// 512x448
+}
+
+MODE_SIZE := [Mode][2]int {
+	.Standard = {256, 224},
+	.Wide = {320, 180},
+	.Hires = {512,448}
+}
+
+SCREEN_MAX_W :: 512
+SCREEN_MAX_H :: 448
+
+Memory :: struct {
+	mode: Mode,
+	palettes: [16][16]u32,
+	screen: [SCREEN_MAX_W * SCREEN_MAX_H]u8,
+}
+
+init :: proc(mem: ^Memory, mode: Mode) {
+	mem^ = {}
+	mem.mode = mode
+	mem.palettes[0] = RICO_PALETTE
+}
+
+screen_size :: proc(mem: ^Memory) -> (w, h: int) {
+	s := MODE_SIZE[mem.mode]
+	return s.x, s.y
+}
+
+to_rgb :: proc(mem: ^Memory, out: []u32) {
+	w, h := screen_size(mem)
+
+	for i in 0..< w * h {
+		out[i] = mem.palettes[0][mem.screen[i] & 15]
+	}
+}
