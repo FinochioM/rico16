@@ -75,3 +75,57 @@ rectfill :: proc(mem: ^Memory, x0, y0, x1, y1:int, col: u8) {
 		slice.fill(mem.screen[y * w + ax:y * w + bx + 1], col & 15)
 	}
 }
+
+circ :: proc(mem: ^Memory, cx, cy, r:int, col:u8) {
+	if r < 0 {
+		return
+	}
+
+	x, y := r, 0
+	err := 1 - r
+
+	for x >= y {
+		pset(mem, cx + x, cy + y, col)
+		pset(mem, cx - x, cy + y, col)
+		pset(mem, cx + x, cy - y, col)
+		pset(mem, cx - x, cy - y, col)
+		pset(mem, cx + y, cy + x, col)
+		pset(mem, cx - y, cy + x, col)
+		pset(mem, cx + y, cy - x, col)
+		pset(mem, cx - y, cy - x, col)
+
+
+		y += 1
+		if err < 0 {
+			err += 2 * y + 1
+		} else {
+			x -= 1
+			err += 2 * (y - x) + 1
+		}
+	}
+}
+
+circfill :: proc(mem: ^Memory, cx, cy, r:int, col:u8) {
+	if r < 0 {
+		return
+	}
+
+	x, y := r, 0
+	err := 1 - r
+
+	for x >= y {
+		rectfill(mem, cx - x, cy + y, cx + x, cy + y, col)
+		rectfill(mem, cx - x, cy - y, cx + x, cy -y, col)
+		rectfill(mem, cx - y, cy + x, cx + y, cy + x, col)
+		rectfill(mem, cx - y, cy -x, cx + y, cy - x, col)
+
+		y += 1
+
+		if err < 0 {
+			err += 2 * y + 1
+		} else {
+			x -= 1
+			err += 2 * (y - x) + 1
+		}
+	}
+}

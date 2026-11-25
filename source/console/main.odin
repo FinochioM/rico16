@@ -55,6 +55,9 @@ main :: proc() {
 		rico.rect(mem, 0, 0, w - 1, h - 1, 4)
 		rico.line(mem, 0, h - 1, w - 1, h / 2, 12)
 
+		rico.circfill(mem, w / 4, h * 3 / 4, 20, 11)
+		rico.circ(mem, w * 3 / 4, h * 3 / 4, 20, 9)
+
 		rico.pset(mem, frame % w, h * 3 / 4, 5)
 
 		rico.to_rgb(mem, pixels)

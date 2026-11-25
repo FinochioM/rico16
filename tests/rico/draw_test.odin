@@ -40,3 +40,24 @@ line_rect :: proc(t: ^testing.T) {
 	testing.expect_value(t, rico.pget(mem, 40, 35), 8)
 	testing.expect_value(t, rico.pget(mem, 35, 35), 1)
 }
+
+@(test)
+circles :: proc(t: ^testing.T) {
+	mem := new(rico.Memory)
+	defer free(mem)
+	rico.init(mem, .Standard)
+
+	rico.circ(mem, 50, 50, 5, 9)
+	testing.expect_value(t, rico.pget(mem, 55, 50), 9)
+	testing.expect_value(t, rico.pget(mem, 50, 45), 9)
+	testing.expect_value(t, rico.pget(mem, 50, 50), 0)
+
+	rico.circfill(mem, 100, 100, 5, 11)
+	testing.expect_value(t, rico.pget(mem, 100, 100), 11)
+	testing.expect_value(t, rico.pget(mem, 105, 100), 11)
+	testing.expect_value(t, rico.pget(mem, 106, 100), 0)
+
+	rico.circfill(mem, 10, 10, 0, 3)
+	testing.expect_value(t, rico.pget(mem, 10, 10), 3)
+	testing.expect_value(t, rico.pget(mem, 11, 10), 0)
+}
