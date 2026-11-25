@@ -26,3 +26,52 @@ pget :: proc(mem: ^Memory, x, y: int) -> u8 {
 
 	return mem.screen[y * w + x]
 }
+
+line :: proc(mem: ^Memory, x0, y0, x1, y1: int, col: u8) {
+	x, y := x0, y0
+	dx := abs(x1 - x0)
+	dy := -abs(y1 - y0)
+	sx := 1 if x0 < x1 else -1
+	sy := 1 if y0 < y1 else - 1
+	err := dx + dy
+
+	for {
+		pset(mem, x, y, col)
+		if x == x1 && y == y1 {
+			break
+		}
+		e2 := 2 * err
+		if e2 >= dy {
+			err += dy
+			x += sx
+		}
+		if e2 <= dx {
+			err += dx
+			y += sy
+		}
+	}
+}
+
+rect :: proc(mem: ^Memory, x0, y0, x1, y1: int, col: u8) {
+	line(mem, x0, y0, x1, y0, col)
+	line(mem, x0, y1, x1, y1, col)
+	line(mem, x0, y0, x0, y1, col)
+	line(mem, x1, y0, x1, y1, col)
+}
+
+rectfill :: proc(mem: ^Memory, x0, y0, x1, y1:int, col: u8) {
+	w, h := screen_size(mem)
+
+	ax := max(min(x0, x1), 0)
+	bx := min(max(x0, x1), w - 1)
+	ay := max(min(y0, y1), 0)
+	by := min(max(y0, y1), h - 1)
+
+	if ax > bx || ay > by {
+		return
+	}
+
+	for y in ay ..=by {
+		slice.fill(mem.screen[y * w + ax:y * w + bx + 1], col & 15)
+	}
+}

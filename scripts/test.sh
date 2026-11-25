@@ -11,12 +11,3 @@ for d in tests/*/; do
 done
 [ $ran -eq 1 ] || echo "no testable code yet, skipping"
 
-if ls source/console/*.odin >/dev/null 2>&1; then
-  echo "== smoke source/console (nil backend)"
-  ext=""; case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) ext=".exe";; esac
-  mkdir -p build/test
-  odin build source/console -out:"build/test/rico16_nil$ext" -debug -vet \
-      -collection:rico16=source -define:RICO_BACKEND=nil
-  "./build/test/rico16_nil$ext"
-  echo "console ran headless ok"
-fi

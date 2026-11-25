@@ -17,3 +17,26 @@ pset_pget :: proc(t: ^testing.T) {
 	rico.cls(mem, 3)
 	testing.expect_value(t, rico.pget(mem, 255, 223), 3)
 }
+
+@(test)
+line_rect :: proc(t: ^testing.T) {
+	mem := new(rico.Memory)
+	defer free(mem)
+	rico.init(mem, .Standard)
+
+	rico.line(mem, 0, 0, 9, 9, 2)
+	testing.expect_value(t, rico.pget(mem, 5, 5), 2)
+	testing.expect_value(t, rico.pget(mem, 5, 6), 0)
+
+	rico.rectfill(mem, 20, 20, 10, 10, 6)
+	testing.expect_value(t, rico.pget(mem, 10, 10), 6)
+	testing.expect_value(t, rico.pget(mem, 20, 20), 6)
+	testing.expect_value(t, rico.pget(mem, 21, 20), 0)
+
+	rico.rectfill(mem, -50, -50, 1000, 1000, 1)
+	testing.expect_value(t, rico.pget(mem, 255, 223), 1)
+
+	rico.rect(mem, 30, 30, 40, 40, 8)
+	testing.expect_value(t, rico.pget(mem, 40, 35), 8)
+	testing.expect_value(t, rico.pget(mem, 35, 35), 1)
+}

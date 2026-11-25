@@ -46,12 +46,14 @@ main :: proc() {
 
 		w, h := rico.screen_size(mem)
 		rico.cls(mem, 0)
-
-		for y in 0..< h / 2 {
-			for x in 0..< w {
-				rico.pset(mem, x, y, u8(x * 16 / w))
-			}
+		
+		bw := w / 16
+		for i in 0..<16 {
+			rico.rectfill(mem, i * bw, 0, i * bw + bw - 1, h / 2, u8(i))
 		}
+
+		rico.rect(mem, 0, 0, w - 1, h - 1, 4)
+		rico.line(mem, 0, h - 1, w - 1, h / 2, 12)
 
 		rico.pset(mem, frame % w, h * 3 / 4, 5)
 
