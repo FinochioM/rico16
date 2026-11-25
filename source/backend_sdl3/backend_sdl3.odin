@@ -10,6 +10,7 @@ INTERFACE :: platform.Interface {
 	shutdown = shutdown,
 	process_events = process_events,
 	present = present,
+	time = time,
 }
 
 window: ^sdl.Window
@@ -83,4 +84,8 @@ present :: proc(pixels: []u32, width, height: int) {
 	sdl.RenderClear(renderer)
 	sdl.RenderTexture(renderer, texture, nil, nil)
 	sdl.RenderPresent(renderer)
+}
+
+time :: proc() -> f64 {
+	return f64(sdl.GetTicksNS()) / 1e9
 }

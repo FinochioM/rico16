@@ -2,10 +2,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ran=0
-for p in rico platform cart luabind editors; do
-  if ls "source/$p"/*.odin >/dev/null 2>&1; then
-    echo "== test source/$p"
-    odin test "source/$p" -vet -collection:rico16=source
+for d in tests/*/; do
+  if ls "$d"*.odin >/dev/null 2>&1; then
+    echo "== test $d"
+    odin test "$d" -vet -collection:rico16=source
     ran=1
   fi
 done
