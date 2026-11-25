@@ -25,6 +25,7 @@ init :: proc(mem: ^Memory, mode: Mode) {
 	mem^ = {}
 	mem.mode = mode
 	mem.palettes[0] = RICO_PALETTE
+	load_font()
 }
 
 set_mode :: proc(mem: ^Memory, mode: Mode) {
