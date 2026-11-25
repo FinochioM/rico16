@@ -1,0 +1,15 @@
+build/
+*.exe
+*.pdb
+*.ilk
+*.o
+*.so
+*.dll
+*.dylib
+*.lib
+*.exp
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
