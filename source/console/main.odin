@@ -1,6 +1,8 @@
 package main
 
 import "core:log"
+import "core:os"
+import "rico16:luabind"
 import "rico16:platform"
 import "rico16:rico"
 import "rico16:backend_sdl3"
@@ -30,6 +32,24 @@ main :: proc() {
 
 	rico.init(mem, .Standard)
 
+	cart: luabind.Cart
+	defer luabind.unload(&cart)
+	has_cart := len(os.args) > 1
+
+	if has_cart {
+		path := os.args[1]
+		src, err := os.read_entire_file(path, context.allocator)
+
+		if err != nil {
+			log.errorf("can't read %s: %v", path, err)
+			return
+		}
+
+		luabind.load(&cart, mem, src, path)
+
+		delete(src)
+	}
+
 	pixels := make([]u32, rico.SCREEN_MAX_W * rico.SCREEN_MAX_H)
 	defer delete(pixels)
 
@@ -49,23 +69,43 @@ main :: proc() {
 			rico.set_mode(mem, next)
 		}
 
+		ticked := false
+
 		for acc >= FRAME {
 			for p in 0..<rico.MAX_PLAYERS {
 				rico.update_pad(mem, p, transmute(rico.Buttons)pf.pad(p))
 			}
-			if rico.btnp(mem, .Up) {
-				counter += 1
+
+			if has_cart {
+				luabind.update(&cart)
+			} else {
+				if rico.btnp(mem, .Up) {
+					counter += 1
+				}
+
+				if rico.btnp(mem, .Down) {
+					counter -= 1
+				}
 			}
-			if rico.btnp(mem, .Down) {
-				counter -= 1
-			}
+
+			ticked = true	
 			frame += 1
 			acc -= FRAME
 		}
 
 		w, h := rico.screen_size(mem)
-
-		draw_pad_tester(mem, counter)
+		
+		if !has_cart {
+			draw_pad_tester(mem, counter)
+		} else if ticked {
+			luabind.draw(&cart)
+			if cart.err != "" {
+				//show an error screen, print for now
+				rico.cls(mem, 1)
+				rico.print(mem, "cart stopped", 4, 4, 12)
+				rico.print(mem, cart.err, 4, 14, 4)
+			}
+		}
 
 		rico.to_rgb(mem, pixels)
 		pf.present(pixels, w, h)
