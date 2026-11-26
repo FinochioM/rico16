@@ -34,20 +34,16 @@ main :: proc() {
 
 	cart: luabind.Cart
 	defer luabind.unload(&cart)
+
+	watch: Watch
 	has_cart := len(os.args) > 1
 
 	if has_cart {
-		path := os.args[1]
-		src, err := os.read_entire_file(path, context.allocator)
-
-		if err != nil {
-			log.errorf("can't read %s: %v", path, err)
+		if !load_cart(&cart, mem, os.args[1]) {
 			return
 		}
 
-		luabind.load(&cart, mem, src, path)
-
-		delete(src)
+		watch_start(&watch, os.args[1])
 	}
 
 	pixels := make([]u32, rico.SCREEN_MAX_W * rico.SCREEN_MAX_H)
@@ -58,6 +54,7 @@ main :: proc() {
 	counter := 0
 	acc := 0.0
 	last := pf.time()
+	last_check := last
 
 	for pf.process_events() {
 		now := pf.time()
@@ -67,6 +64,14 @@ main :: proc() {
 		if pf.key_pressed(.Tab) {
 			next := rico.Mode((int(mem.mode) + 1) %len(rico.Mode))
 			rico.set_mode(mem, next)
+		}
+
+		if has_cart && now - last_check > 0.5 {
+			last_check = now
+			if watch_changed(&watch) {
+				log.infof("reloading %s", watch.path)
+				load_cart(&cart, mem, watch.path)
+			}
 		}
 
 		ticked := false
@@ -100,10 +105,7 @@ main :: proc() {
 		} else if ticked {
 			luabind.draw(&cart)
 			if cart.err != "" {
-				//show an error screen, print for now
-				rico.cls(mem, 1)
-				rico.print(mem, "cart stopped", 4, 4, 12)
-				rico.print(mem, cart.err, 4, 14, 4)
+				draw_error_scren(mem, cart.err)
 			}
 		}
 
@@ -112,4 +114,19 @@ main :: proc() {
 
 		free_all(context.temp_allocator)
 	}
+}
+
+load_cart :: proc(cart: ^luabind.Cart, mem: ^rico.Memory, path: string) -> bool {
+	src, err := os.read_entire_file(path, context.allocator)
+
+	if err != nil {
+		log.errorf("can't read %s: %v", path, err)
+		return false
+	}
+
+	defer delete(src)
+
+	luabind.load(cart, mem, src, path)
+	log.infof("%s: %d / %d", path, cart.tokens, luabind.MAX_TOKENS)
+	return true
 }
