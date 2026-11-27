@@ -1,0 +1,85 @@
+package rico
+
+import "core:image/png"
+import "core:math"
+
+SPRITE_SIZE :: 16
+MAX_SPRITES :: 512
+SHEET_COLS :: 16
+
+sset :: proc(mem: ^Memory, x, y: int, c: u8) {
+	if x < 0 || y < 0 || x >= SHEET_COLS * SPRITE_SIZE || y >= MAX_SPRITES / SHEET_COLS * SPRITE_SIZE {
+		return
+	}
+
+	n := (y / SPRITE_SIZE) * SHEET_COLS + x / SPRITE_SIZE
+	mem.sprites[n][(y % SPRITE_SIZE) * SPRITE_SIZE + x % SPRITE_SIZE] = c & 15
+}
+
+sget :: proc(mem: ^Memory, x, y: int) -> u8 {
+	if x < 0 || y < 0 || x >= SHEET_COLS * SPRITE_SIZE || y >= MAX_SPRITES / SHEET_COLS * SPRITE_SIZE {
+		return 0
+	}
+
+	n := (y / SPRITE_SIZE) * SHEET_COLS + x / SPRITE_SIZE
+	return mem.sprites[n][(y % SPRITE_SIZE) * SPRITE_SIZE + x % SPRITE_SIZE]
+}
+
+sprpal :: proc(mem: ^Memory, n: int, p: u8) {
+	if n < 0 || n >= MAX_SPRITES {
+		return
+	}
+
+	mem.sprite_pal[n] = p & 15
+}
+
+@(private)
+plot :: proc(mem: ^Memory, x, y: int, c, p: u8) {
+	if int(c) in mem.transparent {
+		return
+	}
+
+	w, h := screen_size(mem)
+	if x < 0 || y < 0 || x >= w || y >= h {
+		return
+	}
+
+	mem.screen[y * w + x] = p << 4 | mem.draw_pal[c]
+}
+
+spr :: proc(mem: ^Memory, n, x, y: int, flip_x := false, flip_y := false) {
+	if n < 0 || n >= MAX_SPRITES {
+		return
+	}
+
+	s := &mem.sprites[n]
+	p := mem.sprite_pal[n]
+
+	for sy in 0..<SPRITE_SIZE {
+		v := SPRITE_SIZE - 1 - sy if flip_y else sy
+
+		for sx in 0..<SPRITE_SIZE {
+			u := SPRITE_SIZE - 1 - sx if flip_x else sx
+
+			plot(mem, x + sx, y + sy, s[v * SPRITE_SIZE + u], p)
+		}
+	}
+}
+
+sprx :: proc(mem: ^Memory, n: int, cx, cy: f64, angle: f64 = 0, scale_x: f64 = 1, scale_y: f64 = 1) {
+	if n < 0 || n >= MAX_SPRITES || scale_x == 0 || scale_y == 0 {
+		return
+	}
+
+	s := &mem.sprites[n]
+	p := mem.sprite_pal[n]
+
+	a := angle * math.TAU
+	cs, sn := math.cos(a), math.sin(a)
+
+	if abs(cs) < 1e-9 {cs = 0}
+	if abs(sn) < 1e-9 {sn = 0}
+
+	HALF :: f64(SPRITE_SIZE) / 2
+	r := HALF * math.SQRT_TWO * max(abs(scale_x), abs(scale_y)) + 1
+}
