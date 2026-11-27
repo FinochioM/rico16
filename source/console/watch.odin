@@ -1,25 +1,45 @@
 package main
 
 import "core:os"
+import "core:strings"
 import "core:time"
 
 Watch :: struct {
-	path: string,
-	last: time.Time,
+	paths: [3]string,
+	last: [3]time.Time,
 }
 
 watch_start :: proc(w: ^Watch, path: string) {
-	w.path = path
-	w.last, _ = os.modification_time_by_path(path)
+	sheet, pals := art_paths(path)
+	w.paths = {path, strings.clone(sheet), strings.clone(pals)}
+
+	for p, i in w.paths {
+		w.last[i], _ = os.modification_time_by_path(p)
+	}
+}
+
+watch_stop :: proc(w: ^Watch) {
+	delete(w.paths[1])
+	delete(w.paths[2])
+	w^ = {}
 }
 
 watch_changed :: proc(w: ^Watch) -> bool {
-	t, err := os.modification_time_by_path(w.path)
-	if err != nil || t ==  w.last {
-		return false
+	changed := false
+
+	for p, i in w.paths {
+		if p == "" {
+			continue
+		}
+
+		t, err := os.modification_time_by_path(p)
+		if err != nil || t == w.last[i] {
+			continue
+		}
+
+		w.last[i] = t
+		changed = true
 	}
 
-	w.last = t
-
-	return true
+	return changed
 }

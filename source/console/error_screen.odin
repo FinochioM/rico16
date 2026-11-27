@@ -6,6 +6,8 @@ import "rico16:rico"
 draw_error_scren :: proc(mem: ^rico.Memory, err: string) {
 	w, h := rico.screen_size(mem)
 
+	rico.pal_reset(mem)
+
 	rico.cls(mem, 1)
 	rico.rectfill(mem, 0, 0, w - 1, 10, 11)
 	rico.print(mem, "CART STOPPED", 4, 2, 5)

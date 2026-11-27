@@ -45,6 +45,7 @@ main :: proc() {
 
 		watch_start(&watch, os.args[1])
 	}
+	defer watch_stop(&watch)
 
 	pixels := make([]u32, rico.SCREEN_MAX_W * rico.SCREEN_MAX_H)
 	defer delete(pixels)
@@ -69,8 +70,8 @@ main :: proc() {
 		if has_cart && now - last_check > 0.5 {
 			last_check = now
 			if watch_changed(&watch) {
-				log.infof("reloading %s", watch.path)
-				load_cart(&cart, mem, watch.path)
+				log.infof("reloading %s", watch.paths[0])
+				load_cart(&cart, mem, watch.paths[0])
 			}
 		}
 
@@ -125,6 +126,8 @@ load_cart :: proc(cart: ^luabind.Cart, mem: ^rico.Memory, path: string) -> bool 
 	}
 
 	defer delete(src)
+
+	load_art(mem, path)
 
 	luabind.load(cart, mem, src, path)
 	log.infof("%s: %d / %d", path, cart.tokens, luabind.MAX_TOKENS)
