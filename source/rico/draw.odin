@@ -7,14 +7,21 @@ cls :: proc(mem: ^Memory, col: u8 = 0) {
 	slice.fill(mem.screen[:w * h], col & 15)
 }
 
+camera :: proc(mem: ^Memory, x, y: int) {
+	mem.camera = {x, y}
+}
+
 pset :: proc(mem: ^Memory, x, y: int, col: u8) {
 	w, h := screen_size(mem)
 
-	if x < 0 || y < 0 || x >= w || y >= h {
+	px := x - mem.camera.x
+	py := y - mem.camera.y
+
+	if px < 0 || py < 0 || px >= w || py >= h {
 		return
 	}
 
-	mem.screen[y * w + x] = mem.draw_pal[col & 15]
+	mem.screen[py * w + px] = mem.draw_pal[col & 15]
 }
 
 pget :: proc(mem: ^Memory, x, y: int) -> u8 {
@@ -62,15 +69,17 @@ rect :: proc(mem: ^Memory, x0, y0, x1, y1: int, col: u8) {
 rectfill :: proc(mem: ^Memory, x0, y0, x1, y1:int, col: u8) {
 	w, h := screen_size(mem)
 
-	ax := max(min(x0, x1), 0)
-	bx := min(max(x0, x1), w - 1)
-	ay := max(min(y0, y1), 0)
-	by := min(max(y0, y1), h - 1)
+	cx, cy := mem.camera.x, mem.camera.y
+
+	ax := max(min(x0, x1) - cx, 0)
+	bx := min(max(x0, x1) - cx, w - 1)
+	ay := max(min(y0, y1) - cy, 0)
+	by := min(max(y0, y1) - cy, h - 1)
 
 	if ax > bx || ay > by {
 		return
 	}
-	
+
 	c := mem.draw_pal[col & 15]
 	for y in ay ..=by {
 		slice.fill(mem.screen[y * w + ax:y * w + bx + 1], c)

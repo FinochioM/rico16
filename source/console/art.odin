@@ -21,6 +21,9 @@ load_art :: proc(mem: ^rico.Memory, path: string) {
 	mem.sprites = {}
 	mem.sprite_pal = {}
 
+	rico.reset_maps(mem)
+	rico.camera(mem, 0, 0)
+
 	if data, err := os.read_entire_file(pals, context.temp_allocator); err == nil {
 		if rico.load_palettes(mem, data) {
 			log.infof("palettes from %s", pals)

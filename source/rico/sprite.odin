@@ -54,6 +54,8 @@ spr :: proc(mem: ^Memory, n, x, y: int, flip_x := false, flip_y := false) {
 
 	s := &mem.sprites[n]
 	p := mem.sprite_pal[n]
+	ox := x - mem.camera.x
+	oy := y - mem.camera.y
 
 	for sy in 0..<SPRITE_SIZE {
 		v := SPRITE_SIZE - 1 - sy if flip_y else sy
@@ -61,7 +63,7 @@ spr :: proc(mem: ^Memory, n, x, y: int, flip_x := false, flip_y := false) {
 		for sx in 0..<SPRITE_SIZE {
 			u := SPRITE_SIZE - 1 - sx if flip_x else sx
 
-			plot(mem, x + sx, y + sy, s[v * SPRITE_SIZE + u], p)
+			plot(mem, ox + sx, oy + sy, s[v * SPRITE_SIZE + u], p)
 		}
 	}
 }
@@ -74,6 +76,9 @@ sprx :: proc(mem: ^Memory, n: int, cx, cy: f64, angle: f64 = 0, scale_x: f64 = 1
 	s := &mem.sprites[n]
 	p := mem.sprite_pal[n]
 
+	ccx := cx - f64(mem.camera.x)
+	ccy := cy - f64(mem.camera.y)
+
 	a := angle * math.TAU
 	cs, sn := math.cos(a), math.sin(a)
 
@@ -85,15 +90,15 @@ sprx :: proc(mem: ^Memory, n: int, cx, cy: f64, angle: f64 = 0, scale_x: f64 = 1
 
 	w, h := screen_size(mem)
 
-	x0 := max(int(math.floor(cx - r)), 0)
-	x1 := min(int(math.ceil(cx + r)), w - 1)
-	y0 := max(int(math.floor(cy - r)), 0)
-	y1 := min(int(math.ceil(cy + r)), h - 1)
+	x0 := max(int(math.floor(ccx - r)), 0)
+	x1 := min(int(math.ceil(ccx + r)), w - 1)
+	y0 := max(int(math.floor(ccy - r)), 0)
+	y1 := min(int(math.ceil(ccy + r)), h - 1)
 
 	for y in y0..=y1 {
 		for x in x0..=x1 {
-			dx := f64(x) + 0.5 - cx
-			dy := f64(y) + 0.5 - cy
+			dx := f64(x) + 0.5 - ccx
+			dy := f64(y) + 0.5 - ccy
 
 			u := (dx * cs - dy * sn) / scale_x + HALF
 			v := (dx * sn + dy * cs) / scale_y + HALF

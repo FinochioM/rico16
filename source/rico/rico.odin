@@ -20,8 +20,10 @@ Memory :: struct {
 	palettes: [16][16]u32,
 	draw_pal: [16]u8,
 	transparent: Colors,
+	camera: [2]int,
 	sprites: [MAX_SPRITES][SPRITE_SIZE * SPRITE_SIZE]u8,
 	sprite_pal: [MAX_SPRITES]u8,
+	maps: [MAP_LAYERS]Map_Layer,
 	screen: [SCREEN_MAX_W * SCREEN_MAX_H]u8,
 	pad: [MAX_PLAYERS]Buttons,
 	pad_held: [MAX_PLAYERS][Button]u16,
@@ -34,6 +36,8 @@ init :: proc(mem: ^Memory, mode: Mode) {
 
 	reset_palettes(mem)
 	pal_reset(mem)
+
+	reset_maps(mem)
 
 	load_font(mem)
 }

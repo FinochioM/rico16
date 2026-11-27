@@ -7,6 +7,7 @@ draw_error_scren :: proc(mem: ^rico.Memory, err: string) {
 	w, h := rico.screen_size(mem)
 
 	rico.pal_reset(mem)
+	rico.camera(mem, 0, 0)
 
 	rico.cls(mem, 1)
 	rico.rectfill(mem, 0, 0, w - 1, 10, 11)
