@@ -2,6 +2,7 @@ package main
 
 import "core:log"
 import "core:os"
+import "core:strings"
 import "rico16:luabind"
 import "rico16:platform"
 import "rico16:rico"
@@ -130,6 +131,14 @@ main :: proc() {
 }
 
 load_cart :: proc(cart: ^luabind.Cart, mem: ^rico.Memory, path: string) -> bool {
+	if strings.has_suffix(path, ".r16") {
+		code := load_r16(mem, path) or_return
+
+		luabind.load(cart, mem, transmute([]byte)code, path)
+		log.infof("%s: %d / %d", path, cart.tokens, luabind.MAX_TOKENS)
+		return true
+	}
+
 	src, err := os.read_entire_file(path, context.allocator)
 
 	if err != nil {
