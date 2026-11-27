@@ -22,6 +22,7 @@ load_art :: proc(mem: ^rico.Memory, path: string) {
 	mem.sprite_pal = {}
 
 	rico.reset_maps(mem)
+	rico.reset_sound(mem)
 	rico.camera(mem, 0, 0)
 
 	if data, err := os.read_entire_file(pals, context.temp_allocator); err == nil {

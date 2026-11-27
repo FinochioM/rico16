@@ -12,6 +12,7 @@ import "rico16:backend_sdl3"
 #assert(platform.MAX_PADS == rico.MAX_PLAYERS)
 
 RICO_BACKEND :: #config(RICO_BACKEND, "sdl3")
+AUDIO_AHEAD :: rico.SAMPLE_RATE * 4 / 60
 
 when RICO_BACKEND == "sdl3" {
 	backend :: backend_sdl3.INTERFACE
@@ -31,6 +32,10 @@ main :: proc() {
 	defer free(mem)
 
 	rico.init(mem, .Standard)
+
+	has_audio := pf.audio_open(rico.SAMPLE_RATE)
+	audio := make([]f32, AUDIO_AHEAD)
+	defer delete(audio)
 
 	cart: luabind.Cart
 	defer luabind.unload(&cart)
@@ -97,6 +102,13 @@ main :: proc() {
 			ticked = true	
 			frame += 1
 			acc -= FRAME
+		}
+		
+		if has_audio {
+			if need := AUDIO_AHEAD - pf.audio_queued(); need > 0 {
+				rico.mix(mem, audio[:need])
+				pf.audio_push(audio[:need])
+			}
 		}
 
 		w, h := rico.screen_size(mem)

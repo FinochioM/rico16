@@ -366,3 +366,10 @@ mix :: proc(mem: ^Memory, out: []f32) {
 		sample = f32(clamp(v * 0.25, -1, 1))
 	}
 }
+
+sound_stop :: proc(mem: ^Memory) {
+	mem.music.pattern = -1
+	for &ch in mem.channels {
+		ch.sfx = -1
+	}
+}

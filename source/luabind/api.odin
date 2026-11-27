@@ -38,6 +38,11 @@ register_api :: proc(L: ^lua.State, mem: ^rico.Memory) {
 		{"camera", l_camera},
 		{"mode7", l_mode7},
 		{"mode7line", l_mode7line},
+		{"sfx", l_sfx},
+		{"music", l_music},
+		{"sfxset", l_sfxset},
+		{"sfxspeed", l_sfxspeed},
+		{"pattern", l_pattern},
 	}
 
 	for f in fns {
@@ -340,6 +345,73 @@ l_mode7line :: proc "c" (L: ^lua.State) -> c.int {
 	dy := f64(lua.L_checknumber(L, 6))
 
 	rico.mode7_line(get_mem(L), arg_int(L, 1), arg_int(L, 2), wx, wy, dx, dy)
+
+	return 0
+}
+
+@(private)
+l_sfx :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+	mem := get_mem(L)
+	n := arg_int(L, 1)
+	ch := opt_int(L, 2, -1)
+
+	if n < 0 {
+		rico.sfx_stop(mem, ch)
+	} else {
+		rico.sfx(mem, n, ch)
+	}
+
+	return 0
+}
+
+@(private)
+l_music :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+
+	rico.music(get_mem(L), opt_int(L, 1, -1))
+
+	return 0
+}
+
+@(private)
+l_sfxset :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+
+	note := rico.Note {
+		pitch = u8(clamp(arg_int(L, 3), 0, rico.MAX_PITCH)),
+		wave = rico.Wave(opt_int(L, 4, 0) & 7),
+		vol = u8(clamp(opt_int(L, 5, 5), 0, 7)),
+		fx = rico.Effect(opt_int(L, 6, 0) & 7),
+	}
+
+	rico.sfx_note(get_mem(L), arg_int(L, 1), arg_int(L, 2), note)
+
+	return 0
+}
+
+@(private)
+l_sfxspeed :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+
+	rico.sfx_speed(get_mem(L), arg_int(L, 1), arg_int(L, 2), opt_int(L, 3, 0), opt_int(L, 4, 0))
+
+	return 0
+}
+
+@(private)
+l_pattern :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+
+	flags := transmute(rico.Pattern_Flags)u8(arg_int(L, 2) & 7)
+	sfx := [rico.MUSIC_CHANNELS]int {
+		arg_int(L, 3),
+		opt_int(L, 4, -1),
+		opt_int(L, 5, -1),
+		opt_int(L, 6, -1),
+	}
+
+	rico.set_pattern(get_mem(L), arg_int(L, 1), sfx, flags)
 
 	return 0
 }

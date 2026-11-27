@@ -25,4 +25,7 @@ Interface :: struct #all_or_none {
 	time: proc() -> f64,
 	key_pressed: proc(k: Key) -> bool,
 	pad: proc(player:int) -> Pad_State,
+	audio_open: proc(sample_rate:int) -> bool,
+	audio_queued: proc()-> int,
+	audio_push: proc(samples: []f32),
 }

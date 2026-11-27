@@ -13,6 +13,9 @@ INTERFACE :: platform.Interface {
 	time = time,
 	key_pressed = key_pressed,
 	pad = pad,
+	audio_open = audio_open,
+	audio_queued = audio_queued,
+	audio_push = audio_push,
 }
 
 window: ^sdl.Window
@@ -21,11 +24,12 @@ texture: ^sdl.Texture
 tex_w, tex_h: int
 pressed: bit_set[platform.Key]
 gamepads: [platform.MAX_PADS] ^sdl.Gamepad
+audio: ^sdl.AudioStream
 
 STICK_DEADZONE :: 12000
 
 init :: proc(title: string, width, height: int) -> bool {
-	if !sdl.Init({.VIDEO, .GAMEPAD}) {
+	if !sdl.Init({.VIDEO, .GAMEPAD, .AUDIO}) {
 		log.errorf("SDL_Init failed: %s", sdl.GetError())
 		return false
 	}
@@ -53,6 +57,10 @@ shutdown :: proc() {
 		if gp != nil {
 			sdl.CloseGamepad(gp)
 		}
+	}
+
+	if audio != nil {
+		sdl.DestroyAudioStream(audio)
 	}
 
 	if texture != nil {
@@ -184,4 +192,38 @@ pad :: proc(player: int) -> platform.Pad_State {
 	if ly > STICK_DEADZONE {s+={.Down}}
 
 	return s
+}
+
+audio_open :: proc(sample_rate: int) -> bool {
+	spec := sdl.AudioSpec {
+		format = .F32,
+		channels = 1,
+		freq = i32(sample_rate),
+	}
+
+	audio = sdl.OpenAudioDeviceStream(sdl.AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, nil, nil)
+
+	if audio == nil {
+		log.errorf("SDL_OpenAudioDeviceStream failed: %s", sdl.GetError())
+		return false
+	}
+
+	sdl.ResumeAudioStreamDevice(audio)
+	return true
+}
+
+audio_queued :: proc() -> int {
+	if audio == nil {
+		return 0
+	}
+
+	return int(sdl.GetAudioStreamQueued(audio)) / size_of(f32)
+}
+
+audio_push :: proc(samples: []f32) {
+	if audio == nil || len(samples) == 0 {
+		return
+	}
+
+	sdl.PutAudioStreamData(audio, raw_data(samples), i32(len(samples) * size_of(f32)))
 }

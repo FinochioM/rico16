@@ -8,6 +8,7 @@ draw_error_scren :: proc(mem: ^rico.Memory, err: string) {
 
 	rico.pal_reset(mem)
 	rico.camera(mem, 0, 0)
+	rico.sound_stop(mem)
 
 	rico.cls(mem, 1)
 	rico.rectfill(mem, 0, 0, w - 1, 10, 11)
