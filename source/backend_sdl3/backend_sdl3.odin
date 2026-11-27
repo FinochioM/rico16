@@ -16,15 +16,18 @@ INTERFACE :: platform.Interface {
 	audio_open = audio_open,
 	audio_queued = audio_queued,
 	audio_push = audio_push,
+	text_input = text_input,
 }
 
 window: ^sdl.Window
 renderer: ^sdl.Renderer
 texture: ^sdl.Texture
 tex_w, tex_h: int
-pressed: bit_set[platform.Key]
 gamepads: [platform.MAX_PADS] ^sdl.Gamepad
 audio: ^sdl.AudioStream
+pressed: platform.Keys
+typed: [64]u8
+typed_len: int
 
 STICK_DEADZONE :: 12000
 
@@ -48,6 +51,8 @@ init :: proc(title: string, width, height: int) -> bool {
 	}
 
 	sdl.SetRenderVSync(renderer, 1)
+
+	_ = sdl.StartTextInput(window)
 
 	return true
 }
@@ -76,15 +81,18 @@ process_events :: proc() -> bool {
 	e: sdl.Event
 
 	pressed = {}
+	typed_len = 0
 
 	for sdl.PollEvent(&e) {
 		#partial switch e.type {
 			case .QUIT:
 				return false
 			case .KEY_DOWN:
-				if !e.key.repeat && e.key.scancode == .TAB {
-					pressed += {.Tab}
+				if k, ok:= key_of(e.key.scancode); ok && (!e.key.repeat || k == .Backspace) {
+					pressed += {k}
 				}
+			case .TEXT_INPUT:
+				typed_len += copy(typed[typed_len:], string(e.text.text))
 			case .GAMEPAD_ADDED:
 				open_gamepad(e.gdevice.which)
 			case .GAMEPAD_REMOVED:
@@ -226,4 +234,27 @@ audio_push :: proc(samples: []f32) {
 	}
 
 	sdl.PutAudioStreamData(audio, raw_data(samples), i32(len(samples) * size_of(f32)))
+}
+
+text_input :: proc() -> string {
+	return string(typed[:typed_len])
+}
+
+key_of :: proc(sc: sdl.Scancode) -> (platform.Key, bool) {
+	#partial switch sc {
+		case .TAB:
+			return .Tab, true
+		case .ESCAPE:
+			return .Escape, true
+		case .RETURN, .KP_ENTER:
+			return .Enter, true
+		case .BACKSPACE:
+			return .Backspace, true
+		case .UP:
+			return .Up, true
+		case .DOWN:
+			return .Down, true
+	}
+
+	return {}, false
 }

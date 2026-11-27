@@ -2,8 +2,10 @@ package platform
 
 // extra key that won't be part of the pad in the future
 Key :: enum u8 {
-	Tab,
+	Tab, Escape, Enter, Backspace, Up, Down,
 }
+
+Keys :: bit_set[Key]
 
 Pad_Button :: enum u8 {
 	Left, Right, Up, Down,
@@ -28,4 +30,5 @@ Interface :: struct #all_or_none {
 	audio_open: proc(sample_rate:int) -> bool,
 	audio_queued: proc()-> int,
 	audio_push: proc(samples: []f32),
+	text_input: proc() -> string,
 }
