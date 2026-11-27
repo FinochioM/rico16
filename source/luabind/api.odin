@@ -36,6 +36,8 @@ register_api :: proc(L: ^lua.State, mem: ^rico.Memory) {
 		{"mget", l_mget},
 		{"mapsize", l_mapsize},
 		{"camera", l_camera},
+		{"mode7", l_mode7},
+		{"mode7line", l_mode7line},
 	}
 
 	for f in fns {
@@ -313,6 +315,31 @@ l_camera :: proc "c" (L: ^lua.State) -> c.int {
 	context = runtime.default_context()
 
 	rico.camera(get_mem(L), opt_int(L, 1, 0), opt_int(L, 2, 0))
+
+	return 0
+}
+
+@(private)
+l_mode7 :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+	x := f64(lua.L_checknumber(L, 2))
+	y := f64(lua.L_checknumber(L, 3))
+
+	rico.mode7(get_mem(L), arg_int(L, 1), x, y, opt_num(L, 4, 0), opt_num(L, 5, 32), opt_int(L, 6, 64))
+
+	return 0
+}
+
+@(private)
+l_mode7line :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+
+	wx := f64(lua.L_checknumber(L, 3))
+	wy := f64(lua.L_checknumber(L, 4))
+	dx := f64(lua.L_checknumber(L, 5))
+	dy := f64(lua.L_checknumber(L, 6))
+
+	rico.mode7_line(get_mem(L), arg_int(L, 1), arg_int(L, 2), wx, wy, dx, dy)
 
 	return 0
 }
