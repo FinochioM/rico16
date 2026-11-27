@@ -31,6 +31,11 @@ register_api :: proc(L: ^lua.State, mem: ^rico.Memory) {
 		{"pal", l_pal},
 		{"palt", l_palt},
 		{"palset", l_palset},
+		{"map", l_map},
+		{"mset", l_mset},
+		{"mget", l_mget},
+		{"mapsize", l_mapsize},
+		{"camera", l_camera},
 	}
 
 	for f in fns {
@@ -250,6 +255,64 @@ l_palset :: proc "c" (L: ^lua.State) -> c.int {
 	context = runtime.default_context()
 
 	rico.palset(get_mem(L), u8(arg_int(L, 1) & 15), u8(arg_int(L, 2) & 15), u32(arg_int(L, 3) & 0xffffff))
+
+	return 0
+}
+
+@(private)
+l_map :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+
+	rico.draw_map(get_mem(L), arg_int(L, 1), opt_int(L, 2, 0), opt_int(L, 3, 0))
+
+	return 0
+}
+
+@(private)
+l_mset :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+
+	rico.mset(get_mem(L), arg_int(L, 1), arg_int(L, 2), arg_int(L, 3), arg_int(L, 4))
+	return 0
+}
+
+@(private)
+l_mget :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+
+	lua.pushinteger(L, lua.Integer(rico.mget(get_mem(L), arg_int(L, 1), arg_int(L, 2), arg_int(L,3))))
+
+	return 1
+}
+
+@(private)
+l_mapsize :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+	mem := get_mem(L)
+	layer := arg_int(L, 1)
+
+	if layer < 0 || layer >= rico.MAP_LAYERS {
+		lua.pushinteger(L, 0)
+		lua.pushinteger(L, 0)
+
+		return 2
+	}
+
+	if !lua.isnoneornil(L, 2) {
+		rico.map_size(mem, layer, arg_int(L, 2), arg_int(L,3))
+	}
+
+	lua.pushinteger(L, lua.Integer(mem.maps[layer].w))
+	lua.pushinteger(L, lua.Integer(mem.maps[layer].h))
+
+	return 2
+}
+
+@(private)
+l_camera :: proc "c" (L: ^lua.State) -> c.int {
+	context = runtime.default_context()
+
+	rico.camera(get_mem(L), opt_int(L, 1, 0), opt_int(L, 2, 0))
 
 	return 0
 }
