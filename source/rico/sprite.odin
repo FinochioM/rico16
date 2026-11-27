@@ -1,0 +1,5 @@
+package rico
+
+SPRITE_SIZE :: 16
+MAX_SPRITES :: 512
+SHEET_COLS :: 16

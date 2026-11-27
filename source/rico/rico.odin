@@ -18,6 +18,10 @@ SCREEN_MAX_H :: 448
 Memory :: struct {
 	mode: Mode,
 	palettes: [16][16]u32,
+	draw_pal: [16]u8,
+	transparent: Colors,
+	sprites: [MAX_SPRITES][SPRITE_SIZE * SPRITE_SIZE]u8,
+	sprite_pal: [MAX_SPRITES]u8,
 	screen: [SCREEN_MAX_W * SCREEN_MAX_H]u8,
 	pad: [MAX_PLAYERS]Buttons,
 	pad_held: [MAX_PLAYERS][Button]u16,
@@ -27,7 +31,10 @@ Memory :: struct {
 init :: proc(mem: ^Memory, mode: Mode) {
 	mem^ = {}
 	mem.mode = mode
-	mem.palettes[0] = RICO_PALETTE
+
+	reset_palettes(mem)
+	pal_reset(mem)
+
 	load_font(mem)
 }
 
@@ -45,6 +52,7 @@ to_rgb :: proc(mem: ^Memory, out: []u32) {
 	w, h := screen_size(mem)
 
 	for i in 0..< w * h {
-		out[i] = mem.palettes[0][mem.screen[i] & 15]
+		px := mem.screen[i]
+		out[i] = mem.palettes[px >> 4][px & 15]
 	}
 }

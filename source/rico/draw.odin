@@ -14,7 +14,7 @@ pset :: proc(mem: ^Memory, x, y: int, col: u8) {
 		return
 	}
 
-	mem.screen[y * w + x] = col & 15
+	mem.screen[y * w + x] = mem.draw_pal[col & 15]
 }
 
 pget :: proc(mem: ^Memory, x, y: int) -> u8 {
@@ -70,9 +70,10 @@ rectfill :: proc(mem: ^Memory, x0, y0, x1, y1:int, col: u8) {
 	if ax > bx || ay > by {
 		return
 	}
-
+	
+	c := mem.draw_pal[col & 15]
 	for y in ay ..=by {
-		slice.fill(mem.screen[y * w + ax:y * w + bx + 1], col & 15)
+		slice.fill(mem.screen[y * w + ax:y * w + bx + 1], c)
 	}
 }
 
