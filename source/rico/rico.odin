@@ -28,6 +28,10 @@ Memory :: struct {
 	pad: [MAX_PLAYERS]Buttons,
 	pad_held: [MAX_PLAYERS][Button]u16,
 	font: [128]Glyph,
+	sfx: [MAX_SFX]Sfx,
+	patterns: [MAX_PATTERNS]Pattern,
+	channels: [CHANNELS]Channel,
+	music: Music_State,
 }
 
 init :: proc(mem: ^Memory, mode: Mode) {
@@ -38,6 +42,7 @@ init :: proc(mem: ^Memory, mode: Mode) {
 	pal_reset(mem)
 
 	reset_maps(mem)
+	reset_sound(mem)
 
 	load_font(mem)
 }
